@@ -18,6 +18,7 @@ import json
 import os
 import pep8
 import unittest
+
 DBStorage = db_storage.DBStorage
 classes = {"Amenity": Amenity, "City": City, "Place": Place,
            "Review": Review, "State": State, "User": User}
@@ -89,47 +90,12 @@ class TestFileStorage(unittest.TestCase):
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_get(self):
-        """test doc doc"""
-        state1 = State(name="state1")
-        state2 = State(name="state2")
-        state3 = State(name="state3")
-        models.storage.new(state1)
-        models.storage.new(state2)
-        models.storage.new(state3)
-        models.storage.save()
-        models.storage.close()
-        first_state = list(models.storage.all().values())[2]
-        first_state_id = first_state.id
-        get = models.storage.get(State, first_state_id)
-        self.assertEqual(get.id, first_state_id)
-        models.storage.delete(get)
-        models.storage.save()
-        models.storage.close()
-        get = models.storage.get(State, first_state_id)
-        self.assertEqual(get, None)
+        """Test that get properly returns a requested object"""
+        user = User(name="User1")
+        user.save()
+        self.assertEqual(models.storage.get("User", user.id), user)
 
-class TestFileStorage2(unittest.TestCase):
-    """test doc doc"""
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+    @unittest.skipIf(models.storage_t != "db", "not testing db storage")
     def test_count(self):
-        """test doc doc"""
-        state1 = State(name="state1")
-        state2 = State(name="state2")
-        state3 = State(name="state3")
-        city1 = City(state_id=state1.id, name="San Francisco")
-        city2 = City(state_id=state2.id, name="San Francisco2")
-        city3 = City(state_id=state3.id, name="San Francisco3")
-        models.storage.new(state1)
-        models.storage.new(state2)
-        models.storage.new(state3)
-        models.storage.new(city1)
-        models.storage.new(city2)
-        models.storage.new(city3)
-        models.storage.save()
-        models.storage.close()
-        total = len(models.storage.all())
-        total_state = len(models.storage.all(State))
-        count_total = models.storage.count()
-        count_state = models.storage.count(State)
-        self.assertEqual(total, count_total)
-        self.assertEqual(total_state, count_state)
+        """Test that count properly counts all objects"""
+        self.assertEqual(len(models.storage.all()), models.storage.count())

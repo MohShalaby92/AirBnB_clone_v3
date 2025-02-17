@@ -4,12 +4,6 @@
 
 from api.v1.views import app_views
 from models import storage
-#!/usr/bin/python3
-"""define routes of blueprint
-"""
-
-from api.v1.views import app_views
-from models import storage
 from models.state import State
 from models.city import City
 from models.amenity import Amenity

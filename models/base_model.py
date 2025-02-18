@@ -10,6 +10,7 @@ import sqlalchemy
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 import uuid
+import hashlib
 
 time = "%Y-%m-%dT%H:%M:%S.%f"
 
@@ -42,11 +43,17 @@ class BaseModel:
                 self.updated_at = datetime.utcnow()
             if kwargs.get("id", None) is None:
                 self.id = str(uuid.uuid4())
+            if kwargs.get("password", None):
+                self.password = self._hash_password(kwargs["password"])
         else:
             self.id = str(uuid.uuid4())
             self.created_at = datetime.utcnow()
             self.updated_at = self.created_at
 
+    def _hash_password(self, password):
+        """Hash the password using MD5"""
+        return hashlib.md5(password.encode()).hexdigest()
+            
     def __str__(self):
         """String representation of the BaseModel class"""
         return "[{:s}] ({:s}) {}".format(self.__class__.__name__, self.id,
@@ -59,7 +66,10 @@ class BaseModel:
         models.storage.save()
 
     def to_dict(self):
-        """returns a dictionary containing all keys/values of the instance"""
+        """
+        returns a dictionary containing all keys/values of the instance
+        Excludes the password by default unless include_password is True.
+        """
         new_dict = self.__dict__.copy()
         if "created_at" in new_dict:
             new_dict["created_at"] = new_dict["created_at"].strftime(time)
@@ -68,6 +78,8 @@ class BaseModel:
         new_dict["__class__"] = self.__class__.__name__
         if "_sa_instance_state" in new_dict:
             del new_dict["_sa_instance_state"]
+        if not include_password and "password" in new_dict:
+            del new_dict["password"]
         return new_dict
 
     def delete(self):

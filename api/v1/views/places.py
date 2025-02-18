@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""State objects that handles all default RESTFul API actions"""
+"""Place objects that handles all default RESTFul API actions"""
 
 from api.v1.views import app_views
 from models import storage
@@ -25,7 +25,7 @@ def places(city_id):
 
 @app_views.route("/places/<place_id>", strict_slashes=False, methods=["GET"])
 def get_place(place_id):
-    """Retrieves a City object"""
+    """Retrieves a place object"""
     place = storage.get(Place, place_id)
     if place is None:
         abort(404)
@@ -88,3 +88,52 @@ def update_placey(place_id):
     place.longitude = data.get("longitude", place.longitude)
     place.save()
     return jsonify(place.to_dict()), 200
+
+@app_views.route("/places_search", strict_slashes=False, methods=["POST"])
+def places_search():
+    """Search for Place objects based on JSON body"""
+    # Check if the request body is valid JSON
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        abort(400, "Not a JSON")
+
+    # Initialize sets to store city IDs and place IDs
+    city_ids = set()
+    place_ids = set()
+
+    # Retrieve all places if no criteria are provided
+    if not data or all(len(lst) == 0 for lst in [data.get("states", []), data.get("cities", []), data.get("amenities", [])]):
+        places = storage.all(Place).values()
+        return jsonify([place.to_dict() for place in places])
+
+    if "states" in data and data["states"]:
+        for state_id in data["states"]:
+            state = storage.get(State, state_id)
+            if state:
+                for city in state.cities:
+                    city_ids.add(city.id)
+
+    if "cities" in data and data["cities"]:
+        for city_id in data["cities"]:
+            city_ids.add(city_id)
+
+    for city_id in city_ids:
+        city = storage.get(City, city_id)
+        if city:
+            for place in city.places:
+                place_ids.add(place.id)
+
+    if not city_ids:
+        places = storage.all(Place).values()
+    else:
+        places = [storage.get(Place, place_id) for place_id in place_ids]
+
+    if "amenities" in data and data["amenities"]:
+        amenity_ids = set(data["amenities"])
+        filtered_places = []
+        for place in places:
+            if place and all(amenity.id in [a.id for a in place.amenities] for amenity_id in amenity_ids):
+                filtered_places.append(place)
+        places = filtered_places
+
+    return jsonify([place.to_dict() for place in places if place])

@@ -47,7 +47,6 @@ def delete_amenity(place_id, amenity_id):
     for amenity in place_amenities:
         if amenity.id == amenity_id:
             amenity.delete()
-            amenity.save()
         else:
             abort(404)
     return jsonify({}, 200)

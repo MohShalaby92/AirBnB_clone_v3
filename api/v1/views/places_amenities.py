@@ -17,7 +17,7 @@ def place_amenities(place_id):
     amenities_list = []
     place = storage.get(Place, place_id)
     if not place:
-        abort(400)
+        abort(404)
     if db_mode == "db":
         amenities = place.amenities
         for amenity in amenities:
@@ -32,7 +32,7 @@ def place_amenities(place_id):
                  strict_slashes=False,
                  methods=["DELETE"])
 def delete_amenity(place_id, amenity_id):
-    """deleye an amenity my id"""
+    """deletes an amenity my id"""
     place = storage.get(Place, place_id)
     if not place:
         abort(404)
@@ -72,4 +72,4 @@ def link_amenity(place_id, amenity_id):
     if amenity not in place_amenities:
         place_amenities.append(amenity)
     else:
-        return jsonify(amenity, 200)
+        return jsonify(amenity, 201)
